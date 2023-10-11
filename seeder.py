@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from app.factory import create_app, db
-from app.models import Student, Course, Enrollment
+from app.models import Student, Course, Teacher, STUDENT_COURSE_FK, COURSE_TEACHER_FK
 from faker import Faker
 import random
 
@@ -11,49 +11,79 @@ load_dotenv()
 # Create a Flask app context
 app = create_app()
 
-# Initialize Faker to generate realistic data
-fake = Faker()
-
-# Define a list of common university courses
-sample_courses = [
-    "Philosophy",
-    "Computer Science",
-    "Psychology",
-    "Biology",
-    "History",
-    "Mathematics",
-    "Economics",
-    "Physics",
-    "Chemistry",
-    "English Literature",
-    "Political Science",
-    "Sociology",
-    "Art History",
-    "Engineering",
-    "Geology",
-    "Music",
-    "Foreign Languages",
-    "Theater",
-    "Education",
-]
-
 def seed_database():
     with app.app_context():
-        # Create students with random human names
+        # Initialize the database tables
+        db.create_all()
+
+        # Create a Faker instance for generating names
+        fake = Faker()
+
+        # Define a list of common university courses as strings
+        sample_courses = [
+            "Philosophy",
+            "Computer Science",
+            "Psychology",
+            "Biology",
+            "History",
+            "Mathematics",
+            "Economics",
+            "Physics",
+            "Chemistry",
+            "English Literature",
+            "Political Science",
+            "Sociology",
+            "Art History",
+            "Engineering",
+            "Geology",
+            "Music",
+            "Foreign Languages",
+            "Theater",
+            "Education",
+        ]
+
+        # Create students with actual names
         students = [Student(name=fake.name()) for _ in range(20)]
         db.session.add_all(students)
+        db.session.commit()
 
-        # Create university courses
-        courses = [Course(title=course) for course in sample_courses]
-        db.session.add_all(courses)
+        # Create teachers with actual names
+        teachers = [Teacher(name=fake.name()) for _ in range(10)]
+        db.session.add_all(teachers)
+        db.session.commit()
 
-        # Enroll students in random courses
+        # Initially assign one course to each teacher
+        for i in range(len(teachers)):
+            random_number = random.randint(100, 999)
+            full_course_title = f"{sample_courses[i]} {random_number}"
+            course_data = {
+                "title": full_course_title,
+                COURSE_TEACHER_FK: teachers[i].id  # Using the foreign key variable here
+            }
+            course = Course(**course_data)
+            db.session.add(course)
+        db.session.commit()
+
+        # Assign the remaining courses to random teachers
+        for course_title in sample_courses[len(teachers):]:
+            random_number = random.randint(100, 999)
+            full_course_title = f"{course_title} {random_number}"
+            teacher = random.choice(teachers)
+            course_data = {
+                "title": full_course_title,
+                COURSE_TEACHER_FK: teacher.id  # Using the foreign key variable here
+            }
+            course = Course(**course_data)
+            db.session.add(course)
+        db.session.commit()
+
+        # Enroll each student in at least one random course
+        # NOTE: This part needs to be updated when the many-to-many relationship between Student and Course is reestablished.
+        # For now, I'm leaving it as-is because without the relationship, we can't use `student.courses.extend(random_courses)`.
         for student in students:
-            num_enrollments = random.randint(1, 5)  # Enroll each student in 1 to 5 courses
-            random_courses = random.sample(courses, num_enrollments)
-            for course in random_courses:
-                enrollment = Enrollment(student=student, course=course)
-                db.session.add(enrollment)
+            num_enrollments = random.randint(1, 2)  # Enroll each student in 1 or 2 courses
+            random_courses = random.sample(Course.query.all(), num_enrollments)
+            student.courses.extend(random_courses)
 
         db.session.commit()
 

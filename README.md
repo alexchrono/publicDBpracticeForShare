@@ -40,7 +40,4 @@ This will provide feedback on the correctness of your queries based on the expec
 ## Completion:
 Once you've successfully seeded your database and your queries are providing the expected results, congratulations! You've completed the exercise.
 
-Good luck and happy coding!
-```
-
-You can simply copy and paste the above content into your `README.md` file.
+the best part is this a git repository and you can reset and start all over again.   Have fun .
