@@ -30,6 +30,10 @@ Before testing your queries, ensure that your database is seeded:
 python seeder.py
 ```
 
+## Complete the queries:
+Once you are able to successfully seed your database, go to the GOHERE.py file.   follow the instructions
+and practice making queries.
+
 ### Test Your Queries:
 Once you've established the relationships, you're ready to test your queries:
 ```bash
